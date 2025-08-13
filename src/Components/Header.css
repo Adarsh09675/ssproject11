@@ -2,9 +2,9 @@
 .nav-btn {
   font-weight: 600;
   border-radius: 20px;
-  padding: 5px 14px;    /* smaller padding */
-  min-width: 70px;      /* reduced width */
-  font-size: 0.85rem;   /* slightly smaller font */
+  padding: 5px 14px;    
+  min-width: 70px;      
+  font-size: 0.85rem;   
   color: #fff !important;
   border: none !important;
   box-shadow: none !important;
