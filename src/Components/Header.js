@@ -16,7 +16,7 @@ function Header({ setActiveMenu }) {
               <button className="btn btn-sm btn-fullstack nav-btn" onClick={() => setActiveMenu("Fullstack")}>Fullstack</button>
             </li>
             <li className="nav-item">
-              <button className="btn btn-sm nav-btn btn-secondary" onClick={() => setActiveMenu("Dotnet")}>.NET Core</button>
+              <button className="btn btn-sm nav-btn btn-secondary" onClick={() => setActiveMenu("Dotnet")}>Dot NET Core</button>
             </li>
             <li className="nav-item">
               <button className="btn btn-sm nav-btn btn-success" onClick={() => setActiveMenu("Springboot")}>Spring Boot</button>
