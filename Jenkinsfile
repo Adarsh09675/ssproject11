@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        APP_SERVER = '3.27.167.140'
+        APP_SERVER = '54.252.225.144'
         REMOTE_USER = 'ubuntu'
         REMOTE_DIR = '/var/www/myapp'
         SSH_CRED_ID = 'deploy-ssh-key'
