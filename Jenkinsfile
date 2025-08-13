@@ -7,7 +7,7 @@ pipeline {
   }
 
   environment {
-    APP_SERVER   = '54.252.238.241'
+    APP_SERVER   = '54.79.163.212'
     REMOTE_USER  = 'ubuntu'
     REMOTE_DIR   = '/var/www/myapp'
     SSH_CRED_ID  = 'deploy-ssh-key'   // set this credential in Jenkins (see steps below)
