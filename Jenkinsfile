@@ -17,7 +17,7 @@ pipeline {
 
         stage('Sync & Deploy') {
             steps {
-                sshagent(['deploy-key']) {
+                sshagent(['deploy-ssh-key']) {
                     sh '''
                     echo "🚀 Syncing project to deployment server..."
                     rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude node_modules --exclude .git ./ $DEPLOY_SERVER:$APP_DIR
