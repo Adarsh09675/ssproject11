@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_SERVER = "ubuntu@3.107.102.87 " // Deployment EC2 IP
+        DEPLOY_SERVER ="ubuntu@3.107.102.87 " // Deployment EC2 IP
         APP_DIR = "/home/ubuntu/react-app"
         NGINX_DIR = "/var/www/html"
     }
