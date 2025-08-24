@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_SERVER ="ubuntu@3.107.102.87 " // Deployment EC2 IP
+        DEPLOY_SERVER = "ubuntu@3.107.102.87" // removed trailing space
         APP_DIR = "/home/ubuntu/react-app"
         NGINX_DIR = "/var/www/html"
     }
@@ -18,35 +18,35 @@ pipeline {
         stage('Sync & Deploy') {
             steps {
                 sshagent(['deploy-ssh-key']) {
-                    sh '''
+                    sh """
                     echo "🚀 Syncing project to deployment server..."
-                    rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude node_modules --exclude .git ./ $DEPLOY_SERVER:$APP_DIR
+                    rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude node_modules --exclude .git ./ \$DEPLOY_SERVER:\$APP_DIR
 
                     echo "📦 Building React app on deployment server..."
-                    ssh -o StrictHostKeyChecking=no $DEPLOY_SERVER "
+                    ssh -o StrictHostKeyChecking=no \$DEPLOY_SERVER '
                         set -e
                         cd ~/react-app
 
                         # Only install dependencies if package.json changed
-                        if [ ! -d 'node_modules' ] || [ package.json -nt node_modules/.package_stamp ]; then
-                            echo '🔧 Installing npm dependencies...'
+                        if [ ! -d "node_modules" ] || [ package.json -nt node_modules/.package_stamp ]; then
+                            echo "🔧 Installing npm dependencies..."
                             npm install
                             mkdir -p node_modules
                             touch node_modules/.package_stamp
                         else
-                            echo '✅ Dependencies already installed, skipping npm install'
+                            echo "✅ Dependencies already installed, skipping npm install"
                         fi
 
-                        echo '🏗️ Running build...'
+                        echo "🏗️ Running build..."
                         npm run build
 
-                        echo '📂 Deploying to Nginx directory...'
+                        echo "📂 Deploying to Nginx directory..."
                         sudo rm -rf $NGINX_DIR/*
                         sudo cp -r build/* $NGINX_DIR/
 
-                        echo '✅ Deployment completed!'
-                    "
-                    '''
+                        echo "✅ Deployment completed!"
+                    '
+                    """
                 }
             }
         }
@@ -61,4 +61,3 @@ pipeline {
         }
     }
 }
-
