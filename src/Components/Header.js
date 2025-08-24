@@ -22,7 +22,7 @@ function Header({ setActiveMenu }) {
               <button className="btn btn-sm nav-btn btn-success" onClick={() => setActiveMenu("Springboot")}>Spring Boot</button>
             </li>
             <li className="nav-item">
-              <button className="btn btn-sm nav-btn btn-warning" onClick={() => setActiveMenu("Node")}>Node</button>
+              <button className="btn btn-sm nav-btn btn-warning" onClick={() => setActiveMenu("Node")}>Adarsh</button>
             </li>
             <li className="nav-item">
               <button className="btn btn-sm nav-btn btn-danger" onClick={() => setActiveMenu("DSA")}>DSA</button>
