@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 function Country() {
@@ -8,18 +8,24 @@ function Country() {
 
   const baseUrl = `${process.env.REACT_APP_BASE_URL}/Countries`;
 
-  useEffect(() => {
-    loadCountries();
-  }, []);
-
-  const loadCountries = () => {
+  // Wrapped loadCountries in useCallback
+  const loadCountries = useCallback(() => {
     axios
       .get(baseUrl)
       .then((res) => setCountries(res.data))
       .catch((error) => console.error("Error loading countries:", error));
-  };
+  }, [baseUrl]);
 
-  const handleSave = () => {
+  useEffect(() => {
+    loadCountries();
+  }, [loadCountries]); // added dependency
+
+  const resetForm = useCallback(() => {
+    setId(0);
+    setName("");
+  }, []);
+
+  const handleSave = useCallback(() => {
     const data = { id, name };
 
     if (!name.trim()) {
@@ -27,43 +33,35 @@ function Country() {
       return;
     }
 
-    if (id === 0) {
-      axios
-        .post(baseUrl, data)
-        .then(() => {
-          resetForm();
-          loadCountries();
-        })
-        .catch((error) => console.error("Error adding country:", error));
-    } else {
-      axios
-        .put(`${baseUrl}/${id}`, data)  // PUT usually requires ID in URL
-        .then(() => {
-          resetForm();
-          loadCountries();
-        })
-        .catch((error) => console.error("Error updating country:", error));
-    }
-  };
+    const request =
+      id === 0 ? axios.post(baseUrl, data) : axios.put(`${baseUrl}/${id}`, data);
 
-  const handleEdit = (country) => {
+    request
+      .then(() => {
+        resetForm();
+        loadCountries();
+      })
+      .catch((error) =>
+        console.error(id === 0 ? "Error adding country:" : "Error updating country:", error)
+      );
+  }, [id, name, baseUrl, loadCountries, resetForm]);
+
+  const handleEdit = useCallback((country) => {
     setId(country.id);
     setName(country.name);
-  };
+  }, []);
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this country?")) {
-      axios
-        .delete(`${baseUrl}/${id}`)
-        .then(() => loadCountries())
-        .catch((error) => console.error("Error deleting country:", error));
-    }
-  };
-
-  const resetForm = () => {
-    setId(0);
-    setName("");
-  };
+  const handleDelete = useCallback(
+    (countryId) => {
+      if (window.confirm("Are you sure you want to delete this country?")) {
+        axios
+          .delete(`${baseUrl}/${countryId}`)
+          .then(() => loadCountries())
+          .catch((error) => console.error("Error deleting country:", error));
+      }
+    },
+    [baseUrl, loadCountries]
+  );
 
   return (
     <div className="container">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 function Languages() {
@@ -8,59 +8,51 @@ function Languages() {
 
   const baseUrl = `${process.env.REACT_APP_BASE_URL}/Languages`;
 
-  useEffect(() => {
-    loadLanguages();
-  }, []);
-
-  const loadLanguages = () => {
+  // Wrap in useCallback to prevent eslint warnings
+  const loadLanguages = useCallback(() => {
     axios
       .get(baseUrl)
       .then((res) => setLanguages(res.data))
       .catch((error) => console.error("Error loading languages:", error));
-  };
+  }, [baseUrl]);
 
-  const handleSave = () => {
-    const data = { id, name };
+  useEffect(() => {
+    loadLanguages();
+  }, [loadLanguages]);
 
+  const resetForm = useCallback(() => {
+    setId(0);
+    setName("");
+  }, []);
+
+  const handleSave = useCallback(() => {
     if (!name.trim()) {
       alert("Language name cannot be empty");
       return;
     }
 
-    if (id === 0) {
-      axios
-        .post(baseUrl, data)
-        .then(() => {
-          resetForm();
-          loadLanguages();
-        })
-    } else {
-      axios
-        .put(`${baseUrl}/${id}`, data)
-        .then(() => {
-          resetForm();
-          loadLanguages();
-        })
-    }
-  };
+    const data = { id, name };
+    const request = id === 0 ? axios.post(baseUrl, data) : axios.put(`${baseUrl}/${id}`, data);
 
-  const handleEdit = (language) => {
+    request.then(() => {
+      resetForm();
+      loadLanguages();
+    });
+  }, [id, name, baseUrl, loadLanguages, resetForm]);
+
+  const handleEdit = useCallback((language) => {
     setId(language.id);
     setName(language.name);
-  };
+  }, []);
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this language?")) {
-      axios
-        .delete(`${baseUrl}/${id}`)
-        .then(() => loadLanguages())
-    }
-  };
-
-  const resetForm = () => {
-    setId(0);
-    setName("");
-  };
+  const handleDelete = useCallback(
+    (languageId) => {
+      if (window.confirm("Are you sure you want to delete this language?")) {
+        axios.delete(`${baseUrl}/${languageId}`).then(() => loadLanguages());
+      }
+    },
+    [baseUrl, loadLanguages]
+  );
 
   return (
     <div className="container">
@@ -100,16 +92,10 @@ function Languages() {
                 <td>{c.id}</td>
                 <td>{c.name}</td>
                 <td>
-                  <button
-                    className="btn btn-warning btn-sm me-2"
-                    onClick={() => handleEdit(c)}
-                  >
+                  <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(c)}>
                     Edit
                   </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleDelete(c.id)}
-                  >
+                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(c.id)}>
                     Delete
                   </button>
                 </td>
@@ -128,4 +114,4 @@ function Languages() {
   );
 }
 
-export default Languages
+export default Languages;

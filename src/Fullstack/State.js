@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 function State() {
@@ -11,26 +11,33 @@ function State() {
   const stateUrl = `${process.env.REACT_APP_BASE_URL}/States`;
   const countryUrl = `${process.env.REACT_APP_BASE_URL}/Countries`;
 
-  useEffect(() => {
-    loadStates();
-    loadCountries();
-  }, []);
-
-  const loadStates = () => {
+  // Load functions wrapped in useCallback to stabilize references
+  const loadStates = useCallback(() => {
     axios
       .get(stateUrl)
       .then((res) => setStates(res.data))
       .catch((error) => console.error("Error loading states:", error));
-  };
+  }, [stateUrl]);
 
-  const loadCountries = () => {
+  const loadCountries = useCallback(() => {
     axios
       .get(countryUrl)
       .then((res) => setCountries(res.data))
       .catch((error) => console.error("Error loading countries:", error));
-  };
+  }, [countryUrl]);
 
-  const handleSave = () => {
+  useEffect(() => {
+    loadStates();
+    loadCountries();
+  }, [loadStates, loadCountries]);
+
+  const resetForm = useCallback(() => {
+    setId(0);
+    setName("");
+    setCountryId("");
+  }, []);
+
+  const handleSave = useCallback(() => {
     if (!name.trim()) {
       alert("State name cannot be empty");
       return;
@@ -41,46 +48,26 @@ function State() {
     }
 
     const data = { id, name, countryId: parseInt(countryId) };
+    const request = id === 0 ? axios.post(stateUrl, data) : axios.put(`${stateUrl}/${id}`, data);
 
-    if (id === 0) {
-      axios
-        .post(stateUrl, data)
-        .then(() => {
-          resetForm();
-          loadStates();
-        })
-        .catch((error) => console.error("Error adding state:", error));
-    } else {
-      axios
-        .put(`${stateUrl}/${id}`, data) // PUT usually requires ID in URL
-        .then(() => {
-          resetForm();
-          loadStates();
-        })
-        .catch((error) => console.error("Error updating state:", error));
-    }
-  };
+    request.then(() => {
+      resetForm();
+      loadStates();
+    }).catch((error) => console.error("Error saving state:", error));
+  }, [id, name, countryId, stateUrl, loadStates, resetForm]);
 
-  const handleEdit = (state) => {
+  const handleEdit = useCallback((state) => {
     setId(state.id);
     setName(state.name);
     setCountryId(state.countryId.toString());
-  };
+  }, []);
 
-  const handleDelete = (stateId) => {
+  const handleDelete = useCallback((stateId) => {
     if (window.confirm("Are you sure you want to delete this state?")) {
-      axios
-        .delete(`${stateUrl}/${stateId}`)
-        .then(() => loadStates())
+      axios.delete(`${stateUrl}/${stateId}`).then(() => loadStates())
         .catch((error) => console.error("Error deleting state:", error));
     }
-  };
-
-  const resetForm = () => {
-    setId(0);
-    setName("");
-    setCountryId("");
-  };
+  }, [stateUrl, loadStates]);
 
   return (
     <div className="container">

@@ -1,10 +1,9 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Swal from "sweetalert2";
 
 function Role() {
   const [list, setList] = useState([]);
-
   const [id, setId] = useState(0);
   const [name, setName] = useState("");
 
@@ -12,71 +11,117 @@ function Role() {
   const [viewModal, setViewModal] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
-
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
-    const handleAddUpdate = () => {
-      if (id === 0) {
-        axios.post(`${process.env.REACT_APP_BASE_URL}/Roles`, { id: id, name: name });
-      }
-      else {
-        axios.put(`${process.env.REACT_APP_BASE_URL}/Roles`, { id: id, name: name });
-      }
-      Swal.fire({ toast: true, position: "top-end", icon: "success", title: `Data saved successfully!`, showConfirmButton: false });
-      setName("");
-      setAddUpdateModal(false);
+  const baseUrl = `${process.env.REACT_APP_BASE_URL}/Roles`;
+
+  // Load roles from API
+  const loadRoles = useCallback(() => {
+    axios.get(baseUrl)
+      .then(res => setList(res.data))
+      .catch(err => console.error("Error loading roles:", err));
+  }, [baseUrl]);
+
+  useEffect(() => {
+    loadRoles();
+  }, [loadRoles]);
+
+  const resetForm = useCallback(() => {
+    setId(0);
+    setName("");
+  }, []);
+
+  const handleAddUpdate = () => {
+    if (!name.trim()) {
+      Swal.fire({ icon: "warning", title: "Name cannot be empty" });
+      return;
     }
 
-    const handleDelete = (id) => {
-        axios.delete(`${process.env.REACT_APP_BASE_URL}/Roles/${id}`);
-        Swal.fire({ toast: true, position: "top-end", icon: "success", title: `Data deleted successfully!`, showConfirmButton: false });
-    };
+    const request = id === 0
+      ? axios.post(baseUrl, { name })
+      : axios.put(`${baseUrl}/${id}`, { name });
 
-    const handleEdit = (obj) => {
-        setId(obj.id);
-        setName(obj.name);
-        setAddUpdateModal(true);
-    };
+    request
+      .then(() => {
+        Swal.fire({ toast: true, position: "top-end", icon: "success", title: "Data saved successfully!", showConfirmButton: false, timer: 1500 });
+        resetForm();
+        setAddUpdateModal(false);
+        loadRoles();
+      })
+      .catch(err => {
+        console.error("Error saving role:", err);
+        Swal.fire({ icon: "error", title: "Failed to save data" });
+      });
+  };
 
-    const handleView = (obj) => {
-        setId(obj.id);
-        setName(obj.name);
-        setViewModal(true);
-    };
+  const handleDelete = (roleId) => {
+    if (!window.confirm("Are you sure you want to delete this role?")) return;
 
-    const handleDownload = () => {
-        const link = document.createElement("a");
-        link.href = window.URL.createObjectURL(new Blob([`Id, Name\n${list.map(c => `${c.id},${c.name}`).join("\n")}`], { type: "text/csv" }));
-        link.download = "roles.csv";
-        link.click();
-    };
+    axios.delete(`${baseUrl}/${roleId}`)
+      .then(() => {
+        Swal.fire({ toast: true, position: "top-end", icon: "success", title: "Data deleted successfully!", showConfirmButton: false, timer: 1500 });
+        loadRoles();
+      })
+      .catch(err => {
+        console.error("Error deleting role:", err);
+        Swal.fire({ icon: "error", title: "Failed to delete data" });
+      });
+  };
 
-    useEffect(() => {
-        axios.get(`${process.env.REACT_APP_BASE_URL}/Roles`).then((res) => setList(res.data));
-    }, [handleAddUpdate, handleDelete]);
+  const handleEdit = (obj) => {
+    setId(obj.id);
+    setName(obj.name);
+    setAddUpdateModal(true);
+  };
 
+  const handleView = (obj) => {
+    setId(obj.id);
+    setName(obj.name);
+    setViewModal(true);
+  };
 
-    const filteredList = list.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    const startIndex = (currentPage - 1) * pageSize;
-    const paginatedList = filteredList.slice(startIndex, startIndex + pageSize);
-    const totalPages = Math.ceil(filteredList.length / pageSize);
+  const handleDownload = () => {
+    const csvContent = `Id,Name\n${list.map(c => `${c.id},${c.name}`).join("\n")}`;
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(new Blob([csvContent], { type: "text/csv" }));
+    link.download = "roles.csv";
+    link.click();
+  };
+
+  const filteredList = list.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedList = filteredList.slice(startIndex, startIndex + pageSize);
+  const totalPages = Math.ceil(filteredList.length / pageSize);
 
   return (
     <div className="container">
       <div className="d-flex justify-content-between mb-2 gap-2">
         <h4>🌎 Role Management</h4>
         <div className="d-flex gap-2">
-          <button className="btn btn-primary" onClick={() => setAddUpdateModal(true)}><i className="bi bi-plus-lg"></i> Add Role</button>
+          <button className="btn btn-primary" onClick={() => { resetForm(); setAddUpdateModal(true); }}>
+            <i className="bi bi-plus-lg"></i> Add Role
+          </button>
           <button className="btn btn-success" onClick={handleDownload} title="Export CSV">📥 Export CSV</button>
         </div>
       </div>
 
       <div className="d-flex justify-content-between mb-3 gap-2">
-        <input type="text" className="form-control" placeholder="🔍 Search datas..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} style={{ maxWidth: "250px" }} />
+        <input
+          type="text"
+          className="form-control"
+          placeholder="🔍 Search datas..."
+          value={searchTerm}
+          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+          style={{ maxWidth: "250px" }}
+        />
         <div>
           <label className="me-2">Items per page:</label>
-          <select className="form-select d-inline-block w-auto" value={pageSize} onChange={(e) => { setPageSize(parseInt(e.target.value)); setCurrentPage(1); }}>
+          <select
+            className="form-select d-inline-block w-auto"
+            value={pageSize}
+            onChange={(e) => { setPageSize(parseInt(e.target.value)); setCurrentPage(1); }}
+          >
             <option value={3}>3</option>
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -89,18 +134,23 @@ function Role() {
           <tr><th>Id</th><th>Name</th><th>Actions</th></tr>
         </thead>
         <tbody>
-          {paginatedList.map(c => (
+          {paginatedList.length > 0 ? paginatedList.map(c => (
             <tr key={c.id}>
               <td>{c.id}</td>
               <td>{c.name}</td>
               <td>
-                <button className="border-0 bg-transparent me-2" title="Edit" onClick={() => handleEdit(c)}><i className="bi bi-pencil-fill text-primary fs-5"></i></button>
-                <button className="border-0 bg-transparent me-2" title="Delete" onClick={() => handleDelete(c.id)}><i className="bi bi-trash-fill text-danger fs-5"></i></button>
-                <button className="border-0 bg-transparent" title="View" onClick={() => handleView(c)}><i className="bi bi-eye-fill text-success fs-5"></i></button>
+                <button className="border-0 bg-transparent me-2" title="Edit" onClick={() => handleEdit(c)}>
+                  <i className="bi bi-pencil-fill text-primary fs-5"></i>
+                </button>
+                <button className="border-0 bg-transparent me-2" title="Delete" onClick={() => handleDelete(c.id)}>
+                  <i className="bi bi-trash-fill text-danger fs-5"></i>
+                </button>
+                <button className="border-0 bg-transparent" title="View" onClick={() => handleView(c)}>
+                  <i className="bi bi-eye-fill text-success fs-5"></i>
+                </button>
               </td>
             </tr>
-          ))}
-          {paginatedList.length === 0 && (
+          )) : (
             <tr><td colSpan="3" className="text-center">No data found.</td></tr>
           )}
         </tbody>
@@ -116,13 +166,14 @@ function Role() {
         </ul>
       </nav>
 
+      {/* Add/Update Modal */}
       {addUpdateModal && (
         <>
           <div className="modal fade show" style={{ display: "block" }}>
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header bg-primary text-white">
-                  <h5 className="modal-title">Add Role</h5>
+                  <h5 className="modal-title">{id === 0 ? "Add Role" : "Update Role"}</h5>
                   <button type="button" className="btn-close" onClick={() => setAddUpdateModal(false)}></button>
                 </div>
                 <div className="modal-body">
@@ -139,6 +190,7 @@ function Role() {
         </>
       )}
 
+      {/* View Modal */}
       {viewModal && (
         <>
           <div className="modal fade show" style={{ display: "block" }}>
@@ -164,4 +216,5 @@ function Role() {
     </div>
   );
 }
+
 export default Role;
