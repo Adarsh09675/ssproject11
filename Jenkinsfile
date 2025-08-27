@@ -2,51 +2,54 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_SERVER = "ubuntu@3.107.102.87" // removed trailing space
-        APP_DIR = "/home/ubuntu/react-app"
-        NGINX_DIR = "/var/www/html"
+        DEPLOY_SERVER = "ubuntu@3.27.122.160"
+        APP_PATH = "/var/www/shiwansh_app"
+        NPM_CACHE = "${WORKSPACE}/.npm_cache"   // safer interpolation
+    }
+
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
     }
 
     stages {
-        stage('Clone Repo') {
+        stage('Checkout') {
             steps {
-                echo "📥 Cloning GitHub repository..."
-                git branch: 'master', url: 'https://github.com/Adarsh09675/ssproject11.git'
+                git branch: 'main',
+                    url: 'https://github.com/Adarsh09675/ssproject11.git',
+                    credentialsId: 'github-ssh-key'
             }
         }
 
-        stage('Sync & Deploy') {
+        stage('Install Dependencies') {
             steps {
-                sshagent(['deploy-ssh-key']) {
-                    sh """
-                    echo "🚀 Syncing project to deployment server..."
-                    rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude node_modules --exclude .git ./ \$DEPLOY_SERVER:\$APP_DIR
+                echo "📦 Installing dependencies efficiently"
+                sh '''
+                    mkdir -p "$NPM_CACHE"
+                    npm ci --cache "$NPM_CACHE" --prefer-offline --jobs=$(nproc) --silent --no-progress
+                '''
+            }
+        }
 
-                    echo "📦 Building React app on deployment server..."
-                    ssh -o StrictHostKeyChecking=no \$DEPLOY_SERVER '
-                        set -e
-                        cd ~/react-app
+        stage('Build React App') {
+            steps {
+                echo "⚡ Building React app"
+                sh 'npm run build'
+                script {
+                    if (!fileExists("build/index.html")) {
+                        error "❌ Build failed! build/index.html not found."
+                    }
+                }
+            }
+        }
 
-                        # Only install dependencies if package.json changed
-                        if [ ! -d "node_modules" ] || [ package.json -nt node_modules/.package_stamp ]; then
-                            echo "🔧 Installing npm dependencies..."
-                            npm install
-                            mkdir -p node_modules
-                            touch node_modules/.package_stamp
-                        else
-                            echo "✅ Dependencies already installed, skipping npm install"
-                        fi
-
-                        echo "🏗️ Running build..."
-                        npm run build
-
-                        echo "📂 Deploying to Nginx directory..."
-                        sudo rm -rf $NGINX_DIR/*
-                        sudo cp -r build/* $NGINX_DIR/
-
-                        echo "✅ Deployment completed!"
-                    '
-                    """
+        stage('Deploy to Server') {
+            steps {
+                sshagent(['Ecom-credential']) {
+                    sh '''
+                        rsync -az --delete build/ $DEPLOY_SERVER:$APP_PATH
+                        ssh $DEPLOY_SERVER "sudo systemctl restart nginx"
+                    '''
                 }
             }
         }
@@ -54,10 +57,10 @@ pipeline {
 
     post {
         success {
-            echo "🎉 Pipeline finished successfully!"
+            echo "✅ Deployment Successful!"
         }
         failure {
-            echo "❌ Pipeline failed. Check logs!"
+            echo "❌ Deployment Failed!"
         }
     }
 }
