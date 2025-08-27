@@ -15,7 +15,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
+                git branch: 'master',
                     url: 'https://github.com/Adarsh09675/ssproject11.git',
                     credentialsId: 'github-ssh-key'
             }
