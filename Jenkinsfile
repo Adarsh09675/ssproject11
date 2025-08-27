@@ -51,7 +51,7 @@ pipeline {
         stage('Deploy to Server') {
             steps {
                 echo "🚀 Deploying to $DEPLOY_SERVER"
-                sshagent(['Ecom-credential']) {
+                sshagent(['github-ssh-key']) {
                     sh '''
                         rsync -az --delete build/ $DEPLOY_SERVER:$APP_PATH
                         ssh $DEPLOY_SERVER "sudo systemctl restart nginx"
