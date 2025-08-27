@@ -34,7 +34,9 @@ function Checkbox() {
   const districtUrl = `${process.env.REACT_APP_BASE_URL}/Districts`;
   const languageUrl = `${process.env.REACT_APP_BASE_URL}/Languages`;
 
-  // Wrapped load functions in useCallback to stabilize references
+  // ----------------------------
+  // Data loading functions
+  // ----------------------------
   const loadEmployees = useCallback(() => {
     axios.get(baseUrl).then((res) => {
       const mappedEmployees = res.data.map((emp) => ({
@@ -61,7 +63,6 @@ function Checkbox() {
     axios.get(languageUrl).then((res) => setLanguages(res.data));
   }, [languageUrl]);
 
-  // useEffect now depends on stable load functions
   useEffect(() => {
     loadEmployees();
     loadCountries();
@@ -70,6 +71,9 @@ function Checkbox() {
     loadLanguages();
   }, [loadEmployees, loadCountries, loadStates, loadDistricts, loadLanguages]);
 
+  // ----------------------------
+  // Form helpers
+  // ----------------------------
   const resetForm = useCallback(() => {
     setId(0);
     setFirstName("");
@@ -169,6 +173,9 @@ function Checkbox() {
     [baseUrl, loadEmployees]
   );
 
+  // ----------------------------
+  // Derived state
+  // ----------------------------
   const filteredStates = states.filter((s) => s.countryId === countryId);
   const filteredDistricts = districts.filter((d) => d.stateId === stateId);
 
@@ -180,9 +187,12 @@ function Checkbox() {
     );
   }, []);
 
+  // ----------------------------
+  // Render
+  // ----------------------------
   return (
     <div className="container mt-4">
-      {/* Rest of the JSX remains unchanged */}
+      {/* Your JSX form goes here */}
     </div>
   );
 }
