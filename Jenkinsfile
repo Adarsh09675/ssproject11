@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_SERVER = "ubuntu@3.27.122.160"
+        DEPLOY_SERVER = "ubuntu@13.238.161.34"
         APP_PATH = "/var/www/shiwansh_app"
         NPM_CACHE = "${WORKSPACE}/.npm_cache"
         NODE_ENV = "production"
@@ -19,7 +19,7 @@ pipeline {
                 echo "🔄 Checking out code from GitHub"
                 git branch: 'master',
                     url: 'git@github.com:Adarsh09675/ssproject11.git',
-                    credentialsId: 'github-ssh-key'
+                    credentialsId: 'NewGithub-ssh-key'
             }
         }
 
@@ -51,7 +51,7 @@ pipeline {
         stage('Deploy to Server') {
             steps {
                 echo "🚀 Deploying to $DEPLOY_SERVER"
-                sshagent(['github-ssh-key']) {
+                sshagent(['ec2-app-server-key']) {
                     sh '''
                         rsync -az --delete build/ $DEPLOY_SERVER:$APP_PATH
                         ssh $DEPLOY_SERVER "sudo systemctl restart nginx"
