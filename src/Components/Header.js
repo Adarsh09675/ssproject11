@@ -22,7 +22,7 @@ function Header({ setActiveMenu }) {
               <button className="btn btn-sm nav-btn btn-success" onClick={() => setActiveMenu("Springboot")}>Spring Boot</button>
             </li>
             <li className="nav-item">
-              <button className="btn btn-sm nav-btn btn-warning" onClick={() => setActiveMenu("Node")}>Adarsh</button>
+              <button className="btn btn-sm nav-btn btn-warning" onClick={() => setActiveMenu("Node")}>Django</button>
             </li>
             <li className="nav-item">
               <button className="btn btn-sm nav-btn btn-danger" onClick={() => setActiveMenu("DSA")}>DSA</button>
@@ -34,11 +34,11 @@ function Header({ setActiveMenu }) {
               <button className="btn btn-sm btn-aws nav-btn" onClick={() => setActiveMenu("AWS")}>AWS</button>
             </li>
             <li className="nav-item">
-            <button className="btn btn-sm btn-fullstack nav-btn" onClick={() => setActiveMenu("Azure")}>Azure</button>
+              <button className="btn btn-sm btn-fullstack nav-btn" onClick={() => setActiveMenu("Azure")}>Azure</button>
             </li>
             <li className="nav-item">
               <button className="btn btn-sm nav-btn btn-warning" onClick={() => setActiveMenu("DevOps")}>DevOps</button>
-            </li>            
+            </li>
             <li className="nav-item">
               <button className="btn btn-sm nav-btn btn-info" onClick={() => setActiveMenu("React")}>React</button>
             </li>
