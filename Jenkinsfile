@@ -53,7 +53,8 @@ pipeline {
                 echo "🚀 Deploying to $DEPLOY_SERVER"
                 sshagent(['ec2-app-server-key']) {
                     sh '''
-                        rsync -az --delete build/ $DEPLOY_SERVER:$APP_PATH
+                        # Copy build folder into /var/www/shiwansh_app/build
+                        rsync -az --delete build/ $DEPLOY_SERVER:$APP_PATH/build
                         ssh $DEPLOY_SERVER "sudo systemctl restart nginx"
                     '''
                 }
